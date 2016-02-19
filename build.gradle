@@ -1,0 +1,64 @@
+import groovy.io.FileType
+
+task deployFiles << {
+	def list = []
+	
+	def dir = new File('.')
+	dir.eachFileRecurse (FileType.FILES) { file ->
+		list << file
+	}
+	
+	def groupId = 'com.calypso'
+	def artifactId = ''
+	def version = 'r330103'
+	
+	list.each {
+		artifactId = it.name.replace('.jar','').replace('.RELEASE','').replaceAll(/-\d+\.\d+\.\d+/,'').replaceAll(/-\d+\.\d+/,'')
+		println "deploy:deploy-file -Dfile=${it.path} -DgroupId=${groupId} -DartifactId=${artifactId} -Dversion=${version} -Dpackaging=jar -DrepositoryId=calypso-source -Durl=http://nrio097fcal:9090/nexus/content/repositories/calypso-source/"					
+	}
+}
+
+task createDependencies << {
+	def list = []
+	
+	def dir = new File('./jars')
+	dir.eachFileRecurse (FileType.FILES) { file ->
+		list << file
+	}
+	
+	def groupId = 'com.calypso'
+	def artifactId = ''
+	def version = 'r330103'
+	
+	new File('.', 'dependencies.txt').withWriter('utf-8') { writer ->
+		list.each {
+			artifactId = it.name.replace('.jar','').replace('.RELEASE','').replaceAll(/-\d+\.\d+\.\d+/,'').replaceAll(/-\d+\.\d+/,'')
+			writer.writeLine '<dependency>'
+			writer.writeLine "\t<groupId>${groupId}</groupId>"
+			writer.writeLine "\t<artifactId>${artifactId}</artifactId>"
+			writer.writeLine "\t<version>${version}</version>"
+			writer.writeLine '</dependency>'
+		}
+	}
+}
+
+task createDeploy << {
+	def list = []
+	
+	def dir = new File('./jars')
+	dir.eachFileRecurse (FileType.FILES) { file ->
+		list << file
+	}
+	
+	def groupId = 'com.calypso'
+	def artifactId = ''
+	def version = 'r330103'
+	
+	new File('.', 'deploy.sh').withWriter('utf-8') { writer ->
+		writer.writeLine "#!/bin/sh"
+		list.each {
+			artifactId = it.name.replace('.jar','').replace('.RELEASE','').replaceAll(/-\d+\.\d+\.\d+/,'').replaceAll(/-\d+\.\d+/,'')
+			writer.writeLine "deploy:deploy-file -Dfile=${it.path} -DgroupId=${groupId} -DartifactId=${artifactId} -Dversion=${version} -Dpackaging=jar -DrepositoryId=calypso-source -Durl=http://nrio097fcal:9090/nexus/content/repositories/calypso-source/"			
+		}
+	}
+}
